@@ -2,8 +2,13 @@
 # Replace the description when you change what the app does — the deploy
 # check rejects the scaffold's placeholder text.
 description: >
-  A starter internal tool for Ninja Van teams, built during the AI Champions
-  programme. Serves a single web page and a small JSON API.
+  OPV2 EML / Skywin / VF Vinflair Assign-Parcels Generator for PH CC team. Upload
+  EML manifest (Parcel No col G + Bag ID col H with optional bag list col B/F),
+  Skywin manifest (LM Tracking col B + Carton No col F + Carton Weight col L) or
+  VF Vinflair manifest (LM Tracking col A + Carton Number col B + Carton Weight col T)
+  — 1-3 files merged — and get the 4-column CSV Bag, Parcel, Manifest Weight, Bag
+  Weight with 1 parcel per bag (random pick if many), JT prefix for 6*, MAWB-based
+  filename, ready for OPV2 upload. Carrier auto-detect.
 
 # No database is declared, so none is provisioned and the app stores nothing
 # between visits. To add one later, uncomment the line below and ask your AI
