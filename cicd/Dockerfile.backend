@@ -1,0 +1,15 @@
+FROM python:3.12-slim
+
+WORKDIR /app
+
+COPY backend/requirements.txt ./requirements.txt
+# --only-binary: python:3.12-slim has no C compiler, so a package without a wheel would
+# otherwise attempt a source build and fail deep in a cryptic compile.
+RUN pip install --no-cache-dir --only-binary=:all: -r requirements.txt
+
+COPY backend/ ./
+
+# Substrait requires the backend on port 8000, serving GET /health.
+EXPOSE 8000
+
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

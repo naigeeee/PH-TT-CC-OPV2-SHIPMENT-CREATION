@@ -1,0 +1,15 @@
+# What this app is. Substrait shows this in the portal and the API Library.
+# Replace the description when you change what the app does — the deploy
+# check rejects the scaffold's placeholder text.
+description: >
+  A starter internal tool for Ninja Van teams, built during the AI Champions
+  programme. Serves a single web page and a small JSON API.
+
+# No database is declared, so none is provisioned and the app stores nothing
+# between visits. To add one later, uncomment the line below and ask your AI
+# to write Flyway migrations in backend/resources/db/migration/.
+# database: oceanbase
+
+# Skill/plugin version this app was last deployed with — stamped by
+# /substrait:deploy; do not edit by hand.
+scaffold_version: 2026.08.11.220000

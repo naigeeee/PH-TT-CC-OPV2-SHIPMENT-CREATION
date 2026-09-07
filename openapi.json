@@ -1,0 +1,56 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "My First Substrait App",
+    "description": "A starter internal tool. Serves one web page and a small JSON API.",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": ["system"],
+        "summary": "Health",
+        "description": "Substrait calls this to decide whether the app started correctly.",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "description": "Service is up",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "status": { "type": "string", "example": "ok" } },
+                  "required": ["status"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/info": {
+      "get": {
+        "summary": "Info",
+        "description": "Returns the app name and current server time, so the page can prove the backend is running.",
+        "operationId": "info_api_info_get",
+        "responses": {
+          "200": {
+            "description": "Application information",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "app": { "type": "string", "example": "My First Substrait App" },
+                    "server_time": { "type": "string", "example": "2026-08-20 06:15:48 UTC" }
+                  },
+                  "required": ["app", "server_time"]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

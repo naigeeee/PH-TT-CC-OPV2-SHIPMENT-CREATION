@@ -1,0 +1,13 @@
+# Force LF on everything that a Linux container or bash will execute or parse.
+# Without this, Git for Windows' default core.autocrlf=true checks these out with CRLF
+# and they fail with errors like "$'\r': command not found" or a broken Docker build.
+* text=auto eol=lf
+*.sh          text eol=lf
+*.py          text eol=lf
+*.txt         text eol=lf
+*.json        text eol=lf
+*.yaml        text eol=lf
+*.yml         text eol=lf
+*.md          text eol=lf
+Dockerfile*   text eol=lf
+*.sql         text eol=lf

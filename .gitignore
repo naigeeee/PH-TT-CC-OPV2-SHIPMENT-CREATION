@@ -1,0 +1,19 @@
+.substrait/
+.substrait-last-run.log
+token.txt
+setup-check.txt
+__pycache__/
+*.pyc
+.venv/
+venv/
+node_modules/
+dist/
+build/
+.env
+.env.*
+!frontend/.env.production
+.DS_Store
+# OneDrive / Windows sync artefacts — never commit these
+*conflicted copy*
+*-DESKTOP-*
+Zone.Identifier
