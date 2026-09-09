@@ -1720,6 +1720,42 @@ async function autoSplitIfLarge(inputEl){
     return false;
   }catch(e){ console.warn('autoSplit failed', e); return false; }
 }
+async function convertExcelToCSV(inputEl){
+  try{
+    if(!inputEl.files || !inputEl.files.length) return false;
+    if(typeof XLSX==='undefined') return false;
+    const dt = new DataTransfer();
+    let converted = 0;
+    for(const f of Array.from(inputEl.files)){
+      const nm = f.name.toLowerCase();
+      const isExcel = nm.endsWith('.xlsx')||nm.endsWith('.xls')||nm.endsWith('.xlsb');
+      if(!isExcel){ dt.items.add(f); continue; }
+      const buf = await f.arrayBuffer();
+      const wb = XLSX.read(buf, {type:'array', dense:true});
+      let best = null, bestLen = 0;
+      wb.SheetNames.forEach(n=>{
+        const ws = wb.Sheets[n];
+        const rows = XLSX.utils.sheet_to_json(ws, {header:1, raw:true, defval:''});
+        if(rows.length > bestLen){ bestLen = rows.length; best = {name:n, rows}; }
+      });
+      if(!best || bestLen < 2){ dt.items.add(f); continue; }
+      const cleanCell = v => (typeof v==='string' && /[\r\n]/.test(v) ? v.replace(/[\r\n]+/g, ' ') : v);
+      const header = best.rows[0].map(cleanCell);
+      const data = best.rows.slice(1).map(r=>r.map(cleanCell)).filter(r=>r.some(v=>String(v).trim()!==''));
+      if(!data.length){ dt.items.add(f); continue; }
+      const ws = XLSX.utils.aoa_to_sheet([header, ...data]);
+      const csv = XLSX.utils.sheet_to_csv(ws);
+      const base = f.name.replace(/\.[^.]+$/,'');
+      dt.items.add(new File([csv], base + '.csv', {type:'text/csv'}));
+      converted++;
+    }
+    if(converted > 0){
+      inputEl.files = dt.files;
+      inputEl.dispatchEvent(new Event('change'));
+    }
+    return converted > 0;
+  }catch(e){ console.warn('convertExcelToCSV failed', e); return false; }
+}
 function fmtMB(b){ return (b/1024/1024).toFixed(1)+' MB'; }
 function checkSizesOrBlock(){
   // returns {blocked:boolean} — shows popup when any file exceeds HARD_MB
@@ -1925,20 +1961,35 @@ gen.addEventListener('click', async ()=>{
   // Hard size gate: block anything over HARD_MB before upload to avoid Bad Gateway
   const gate = checkSizesOrBlock();
   if(gate.blocked){ return; }
-  // Large-file strategy: 1) Excel→CSV + auto-split (fast CSV processing server-side),
-  // 2) chunked+gzip fallback. Both avoid 502/504 on 30MB files.
-  const bigSingle = file1.files.length===1 && file1.files[0].size > 5*1024*1024;
-  if(bigSingle){
-    const nm = file1.files[0].name.toLowerCase();
-    const isExcel = nm.endsWith('.xlsx')||nm.endsWith('.xls')||nm.endsWith('.xlsb');
-    if(isExcel && typeof XLSX!=='undefined'){
-      msg.innerHTML = '<div class="alert alert-warn">Large Excel detected — converting to CSV + auto-splitting into smaller parts for faster processing…</div>';
-      gen.textContent = "Converting…"; updateProgress(10);
-      const did = await autoSplitIfLarge(file1);
-      updateProgress(null);
-      if(did){
-        msg.innerHTML = `<div class="alert alert-ok">Auto-split into ${file1.files.length} CSV files — now uploading…</div>`;
+  // Large-file strategy: 1) Excel→CSV conversion (fast CSV processing server-side),
+  // 2) auto-split for single large files, 3) chunked+gzip fallback.
+  // Convert ALL Excel files to CSV first — avoids slow server-side Excel parsing
+  // which is the #1 cause of gateway timeouts with multiple files.
+  const hasExcel = Array.from(file1.files).some(f=>{
+    const n=f.name.toLowerCase(); return n.endsWith('.xlsx')||n.endsWith('.xls')||n.endsWith('.xlsb');
+  });
+  if(hasExcel && typeof XLSX!=='undefined'){
+    msg.innerHTML = '<div class="alert alert-warn">Converting Excel → CSV for faster processing…</div>';
+    gen.textContent = "Converting…"; updateProgress(10);
+    await convertExcelToCSV(file1);
+    if(file2.files[0]){
+      const bn = file2.files[0].name.toLowerCase();
+      if((bn.endsWith('.xlsx')||bn.endsWith('.xls')||bn.endsWith('.xlsb')) && typeof XLSX!=='undefined'){
+        await convertExcelToCSV(file2);
       }
+    }
+    updateProgress(null);
+    msg.innerHTML = `<div class="alert alert-ok">Excel files converted to CSV — now uploading…</div>`;
+  }
+  // Also auto-split if single file still > 5MB after conversion (e.g. very large CSV)
+  const bigSingle = file1.files.length===1 && file1.files[0].size > 5*1024*1024;
+  if(bigSingle && typeof XLSX!=='undefined'){
+    msg.innerHTML = '<div class="alert alert-warn">Large file detected — auto-splitting for faster processing…</div>';
+    gen.textContent = "Splitting…"; updateProgress(10);
+    const did = await autoSplitIfLarge(file1);
+    updateProgress(null);
+    if(did){
+      msg.innerHTML = `<div class="alert alert-ok">Auto-split into ${file1.files.length} CSV files — now uploading…</div>`;
     }
   }
   const totalSize = Array.from(file1.files).reduce((s,f)=>s+f.size,0);
