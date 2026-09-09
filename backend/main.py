@@ -1739,7 +1739,7 @@ async function convertExcelToCSV(inputEl){
         if(rows.length > bestLen){ bestLen = rows.length; best = {name:n, rows}; }
       });
       if(!best || bestLen < 2){ dt.items.add(f); continue; }
-      const cleanCell = v => (typeof v==='string' && /[\r\n]/.test(v) ? v.replace(/[\r\n]+/g, ' ') : v);
+      const cleanCell = v => (typeof v==='string' && /[\\r\\n]/.test(v) ? v.replace(/[\\r\\n]+/g, ' ') : v);
       const header = best.rows[0].map(cleanCell);
       const data = best.rows.slice(1).map(r=>r.map(cleanCell)).filter(r=>r.some(v=>String(v).trim()!==''));
       if(!data.length){ dt.items.add(f); continue; }
