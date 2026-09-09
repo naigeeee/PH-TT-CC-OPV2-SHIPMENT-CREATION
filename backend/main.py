@@ -1639,7 +1639,7 @@ let lastRows = [];
 let lastFilename = "EML_assign_parcels.csv";
 // Server limits: nginx client_max_body_size 40m, per-file backend cap 50MB.
 // Warn at 30MB (user-asked threshold), hard-block above 40MB to avoid 502/504 Bad Gateway.
-const WARN_MB = 30, HARD_MB = 40;
+const WARN_MB = 30, HARD_MB = 50;
 const modalBg = () => document.querySelector('#modalBg');
 function showModal(title, body, icon, autoRefreshSec){
   document.querySelector('#modalTitle').textContent = title;
