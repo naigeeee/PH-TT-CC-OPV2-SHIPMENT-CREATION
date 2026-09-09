@@ -1694,8 +1694,13 @@ async function autoSplitIfLarge(inputEl){
     if(!best || bestLen < 2) return false;
     // Strip embedded CR/LF from cells (multi-line addresses break CSV row
     // structure and crash server-side parsing). Bag/Parcel/Weight never
-    // legitimately contain line breaks.
-    const cleanCell = v => (typeof v==='string' && /[\\r\\n]/.test(v) ? v.replace(/[\\r\\n]+/g, ' ') : v);
+    // legitimately contain line breaks. Large integers become strings to
+    // prevent sheet_to_csv from formatting them as scientific notation.
+    const cleanCell = v => {
+      if(typeof v==='string' && /[\\r\\n]/.test(v)) v = v.replace(/[\\r\\n]+/g, ' ');
+      if(typeof v==='number' && Number.isInteger(v) && Math.abs(v) >= 100000) v = String(v);
+      return v;
+    };
     const header = best.rows[0].map(cleanCell);
     const data = best.rows.slice(1).map(r=>r.map(cleanCell)).filter(r=>r.some(v=>String(v).trim()!==''));
     if(!data.length) return false;
